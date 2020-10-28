@@ -2,6 +2,7 @@ import sys
 import os
 import numpy as np
 import pandas as pd
+import itertools as it
 
 np.random.seed(42)
 
@@ -21,7 +22,14 @@ class Net(object):
 			num_layers : Number of HIDDEN layers.
 			num_units : Number of units in each Hidden layer.
 		'''
-		raise NotImplementedError
+		self.num_layers = num_layers
+		self.num_units = num_units
+		self.sizes = [90] + [num_units]*num_layers + [1]
+		self.biases = [np.random.uniform(-1, 1,size=(y,1)) for y in it.repeat(num_units,num_layers)]
+		self.wieghts = [np.random.uniform(-1,1,size=(y,x)) 
+                        for x, y in zip(self.sizes[:-1], self.sizes[1:])]
+		# print(np.random.randn(64,1))
+		# print(self.wieghts)
 
 	def __call__(self, X):
 		'''
@@ -35,7 +43,12 @@ class Net(object):
 		----------
 			y : Output of the network, numpy array of shape m x 1
 		'''
-		raise NotImplementedError
+		def sigmoid(z):
+			return 1.0/(1.0 + np.exp(-z))
+
+		for b,w in zip(self.wieghts,self.biases):
+			a = sigmoid(np.dot(w,a)+b)
+		return a
 
 	def backward(self, X, y, lamda):
 		'''
@@ -182,11 +195,24 @@ def get_test_data_predictions(net, inputs):
 	'''
 	raise NotImplementedError
 
+def get_data(filename, is_test = False):
+	data_frame = pd.read_csv(filename)
+	x = data_frame.values
+	if is_test:
+		return x
+	else:
+		inputs = x[:,1:]
+		targets = x[:,:1]
+		return inputs,targets
+	
+
 def read_data():
 	'''
 	Read the train, dev, and test datasets
 	'''
-	raise NotImplementedError
+	train_input, train_target = get_data('data/train.csv')
+	dev_input,dev_target = get_data('data/dev.csv')
+	test_input = get_data('data/test.csv',True)
 
 	return train_input, train_target, dev_input, dev_target, test_input
 
