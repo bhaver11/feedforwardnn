@@ -304,7 +304,6 @@ def train(
 			# Update model's weights and biases
 			net.weights = weights_updated	
 			net.biases = biases_updated
-			print(net.weights)
 			# Compute loss for the batch
 			# print(weights_updated)
 
