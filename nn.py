@@ -146,8 +146,8 @@ class Net(object):
 				nabla_w[-l] = np.dot(delta,activations[-l-1].T)
 				# print("nabla_b[-l] shape ",nabla_b[-l].shape)
 				# print("nabla_w[-l] shape ",nabla_w[-l].shape)
-			del_b = [db+dnb for db,dnb in zip(del_b,nabla_b)]
-			del_w = [dw+dnw.T for dw,dnw in zip(del_w,nabla_w)]
+			del_b = [db+dnb/(X.shape[0]) for db,dnb in zip(del_b,nabla_b)]
+			del_w = [dw+dnw.T/(X.shape[0]) for dw,dnw in zip(del_w,nabla_w)]
 			# print("here")
 			# print(del_w)
 		
@@ -232,7 +232,10 @@ def loss_regularization(weights, biases):
 	----------
 		l2 regularization loss 
 	'''
-	return 0
+	reg = 0
+	for w in weights:
+		reg += np.sum(np.square(w))
+	return reg
 
 def loss_fn(y, y_hat, weights, biases, lamda):
 	'''
@@ -287,7 +290,7 @@ def train(
 
 	m = train_input.shape[0]
 
-	for e in range(1):
+	for e in range(max_epochs):
 		epoch_loss = 0.
 		for i in range(0, m, batch_size):
 			batch_input = train_input[i:i+batch_size]
@@ -339,7 +342,8 @@ def get_test_data_predictions(net, inputs):
 		predictions (optional): Predictions obtained from forward pass
 								on test data, numpy array of shape m x 1
 	'''
-	return net(inputs)
+	results = net(inputs)
+	return results
 	# raise NotImplementedError
 
 def get_data(filename, is_test = False):
@@ -369,7 +373,7 @@ def main():
 	# These parameters should be fixed for Part 1
 	max_epochs = 50
 	batch_size = 256
-	learning_rate = 0.000001
+	learning_rate = 0.01
 	num_layers = 1
 	num_units = 64
 	lamda = 0.1 # Regularization Parameter
@@ -382,8 +386,9 @@ def main():
 		train_input, train_target,
 		dev_input, dev_target
 	)
-	get_test_data_predictions(net, test_input)
-
-
+	predictions = get_test_data_predictions(net, test_input)
+	# print(predictions.shape)
+	pred_idx = np.insert(predictions, 0, range(1,predictions.size+1), axis=1)
+	np.savetxt('pred.csv', pred_idx, delimiter=',', header='Id,Predicted',fmt='%0.1f,%d',comments="")
 if __name__ == '__main__':
 	main()
