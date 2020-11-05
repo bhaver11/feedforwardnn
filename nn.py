@@ -269,6 +269,18 @@ def rmse(y, y_hat):
 	'''
 	return (loss_mse(y,y_hat))**0.5
 
+# From -> https://stackoverflow.com/questions/279561/what-is-the-python-equivalent-of-static-variables-inside-a-function
+def early_stopping(dev_loss):
+    last_k_losses.append(dev_loss)
+    if len(last_k_losses) < k:
+        return False
+    last_k_losses.pop(0)
+    return (max(last_k_losses) - min(last_k_losses)) < min_diff
+
+k = 3 #for early stopping # check last k error values
+last_k_losses = []
+min_diff = 0.09
+
 
 def train(
 	net, optimizer, lamda, batch_size, max_epochs,
@@ -313,7 +325,8 @@ def train(
 			print(e, i, rmse(batch_target, pred), batch_loss)
 
 		print(e, epoch_loss)
-
+		if(early_stopping(batch_loss)):
+			break
 		# Write any early stopping conditions required (only for Part 2)
 		# Hint: You can also compute dev_rmse here and use it in the early
 		# 		stopping condition.
@@ -372,7 +385,7 @@ def main():
 	# These parameters should be fixed for Part 1
 	max_epochs = 50
 	batch_size = 256
-	learning_rate = 0.01
+	learning_rate = 0.0001
 	num_layers = 1
 	num_units = 64
 	lamda = 0.1 # Regularization Parameter
