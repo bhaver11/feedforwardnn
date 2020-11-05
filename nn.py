@@ -7,6 +7,19 @@ np.random.seed(42)
 
 NUM_FEATS = 90
 
+
+class Scaler():
+	# hint: https://machinelearningmastery.com/standardscaler-and-minmaxscaler-transforms-in-python/
+	def __init__(self):
+		self.min = []
+		self.max = []
+	def __call__(self,features, is_train=False):
+		self.min = np.min(features,axis=0)
+		self.max = np.max(features,axis=0)
+
+
+scaler = Scaler()
+
 class Net(object):
 	'''
 	'''
@@ -69,16 +82,12 @@ class Net(object):
 		----------
 			y : Output of the network, numpy array of shape m x 1
 		'''
-
-		
-		# print(X.shape)
 		for i,(b,w) in enumerate (zip(self.biases,self.weights)):
 			if i < len(self.weights)-1:
 				X = self.relu(np.dot(X,w)+b.T)
 			else:
 				X = np.dot(X,w)+b.T
 		return X
-		# raise NotImplementedError
 
 	def backward(self, X, y, lamda):
 		'''
@@ -304,7 +313,7 @@ def train(
 			# Update model's weights and biases
 			net.weights = weights_updated	
 			net.biases = biases_updated
-			print(net.weights)
+			# print(net.weights)
 			# Compute loss for the batch
 			# print(weights_updated)
 
@@ -350,10 +359,12 @@ def get_data(filename, is_test = False):
 	data_frame = pd.read_csv(filename)
 	x = data_frame.values
 	if is_test:
-		return x
+		return ((x - scaler.min)/(scaler.max - scaler.min + 0.0001)) #scaling input
 	else:
 		inputs = x[:,1:]
+		scaler(inputs)
 		targets = x[:,:1]
+		inputs = ((inputs - scaler.min)/(scaler.max - scaler.min + 0.0001))
 		return inputs,targets
 	
 
