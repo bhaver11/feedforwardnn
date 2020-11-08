@@ -6,6 +6,16 @@ import pandas as pd
 np.random.seed(42)
 
 NUM_FEATS = 90
+def early_stopping(dev_loss):
+    last_k_losses.append(dev_loss)
+    if len(last_k_losses) < k:
+        return False
+    last_k_losses.pop(0)
+    return (max(last_k_losses) - min(last_k_losses)) < min_diff
+
+k = 3 #for early stopping # check last k error values
+last_k_losses = []
+min_diff = 0.09
 
 class Net(object):
     '''
@@ -261,7 +271,13 @@ def train(
             # print(e, i, rmse(batch_target, pred), batch_loss) # comment after checking
 
         print(e, epoch_loss) # comment after checking
-        print("train rmse : ", rmse(net(train_input),train_target))
+        train_loss = rmse(net(train_input),train_target)
+        print("train rmse : ", train_loss)
+        dev_pred = net(dev_input)
+        dev_rmse = rmse(dev_target, dev_pred)
+        print('RMSE on train data: {:.5f}'.format(dev_rmse))
+        if(early_stopping(train_loss)):
+            break
         # Write any early stopping conditions required (only for Part 2)
         # Hint: You can also compute dev_rmse here and use it in the early
         # 		stopping condition.
@@ -329,7 +345,7 @@ def main():
 
     learning_rate = 0.01
     num_layers = 2
-    num_units = 128
+    num_units = 64
     lamda = 5 # Regularization Parameter
 
     train_input, train_target, dev_input, dev_target, test_input = read_data()
